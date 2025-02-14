@@ -1,41 +1,16 @@
-1. Архітектура застосунку
+**Технології, що використовуються:**
 
-Проєкт буде мати класичну структуру client-server:
+**Бекенд (Node.js, TypeScript, MongoDB)**
 
-* Бекенд: REST API на Node.js (Express) з MongoDB.
-* Фронтенд: React-застосунок з Redux Toolkit для управління станом.
+Express – для створення REST API.
+MongoDB (Mongoose) – для роботи з базою даних.
+JWT (jsonwebtoken) – для автентифікації користувачів.
+Nodemon – для автоматичного перезапуску сервера при змінах.
 
-2. Структура папок
+**Фронтенд (React, TypeScript, Formik, Redux, Tailwind)**
 
-Бекенд (Node.js, Express, MongoDB)
-
-`/server
-│── /src
-│   │── /config (конфігурації, підключення до БД)
-│   │── /controllers (логіка обробки запитів)
-│   │── /middlewares (JWT, перевірки доступу)
-│   │── /models (Mongoose-схеми)
-│   │── /routes (маршрути API)
-│   │── /services (бізнес-логіка)
-│   │── /utils (допоміжні функції)
-│   └── server.ts (основний файл сервера)
-│── package.json
-│── tsconfig.json
-│── .env`
-
-
-Фронтенд (React, Redux Toolkit, Tailwind)
-
-`/client
-│── /src
-│   │── /components (UI-компоненти)
-│   │── /pages (Сторінки)
-│   │── /features (Redux slices)
-│   │── /services (API-запити)
-│   │── /hooks (кастомні хуки)
-│   │── /utils (допоміжні функції)
-│   │── /styles (глобальні стилі Tailwind)
-│   └── main.tsx (вхідний файл)
-│── package.json
-│── tsconfig.json
-│── tailwind.config.js`
+React + TypeScript – основа фронтенду.
+Formik + Yup – для керування формами та валідації.
+Redux Toolkit – для управління станом.
+React Router – для навігації.
+Tailwind CSS – для стилізації.
