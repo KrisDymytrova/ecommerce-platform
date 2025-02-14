@@ -9,7 +9,7 @@
 
 Бекенд (Node.js, Express, MongoDB)
 
-/server
+`/server
 │── /src
 │   │── /config (конфігурації, підключення до БД)
 │   │── /controllers (логіка обробки запитів)
@@ -21,12 +21,12 @@
 │   └── server.ts (основний файл сервера)
 │── package.json
 │── tsconfig.json
-│── .env
+│── .env`
 
 
 Фронтенд (React, Redux Toolkit, Tailwind)
 
-/client
+`/client
 │── /src
 │   │── /components (UI-компоненти)
 │   │── /pages (Сторінки)
@@ -38,4 +38,4 @@
 │   └── main.tsx (вхідний файл)
 │── package.json
 │── tsconfig.json
-│── tailwind.config.js
+│── tailwind.config.js`
