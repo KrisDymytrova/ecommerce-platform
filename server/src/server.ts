@@ -1,21 +1,25 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
 import dotenv from 'dotenv';
 
+import authRoutes from './routes/authRoutes';
+
 dotenv.config();
+
+const PORT: number = parseInt(process.env.PORT as string, 10) || 5001;
+const MONGO_URI: string = process.env.MONGO_URI as string;
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.use(helmet());
-app.use(morgan('dev'));
 
-app.get('/', (req: Request, res: Response) => {
-    res.send('Hello, world!');
-});
+mongoose
+    .connect(MONGO_URI)
+    .then(() => console.log('✅ MongoDB підключено'))
+    .catch((err) => console.error('❌ MongoDB помилка:', err));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.use('/api/auth', authRoutes);
+
+app.listen(PORT, () => console.log(`🚀 Сервер працює на http://localhost:${PORT}`));
