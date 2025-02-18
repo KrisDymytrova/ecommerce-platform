@@ -1,11 +1,11 @@
 import express from 'express';
+import { authMiddleware } from '../../middlewares/authMiddleware';
 import {
     clientLogin,
     clientRefreshToken,
     clientLogout,
     clientRegister
 } from '../../controllers/client/authClientController';
-import { authMiddleware } from '../../middlewares/authMiddleware';
 
 const router = express.Router();
 

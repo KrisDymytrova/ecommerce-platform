@@ -3,8 +3,23 @@ import Order from '../../models/Order';
 
 const getAllOrders = async (req: Request, res: Response): Promise<void> => {
     try {
-        const orders = await Order.find().populate('user');
-        res.status(200).json(orders);
+        const { page = 1, limit = 10 } = req.query;
+
+        const orders = await Order.find()
+            .populate('user')
+            .skip((+page - 1) * +limit)
+            .limit(+limit);
+        const totalOrders = await Order.countDocuments();
+
+        res.status(200).json({
+            totalOrders,
+            orders: orders.map(order => ({
+                ...order.toObject(),
+                novaPoshtaBranchDetails: order.novaPoshtaBranchDetails || {},
+            })),
+            page: +page,
+            totalPages: Math.ceil(totalOrders / +limit),
+        });
     } catch (error) {
         res.status(500).json({ message: 'Помилка при отриманні замовлень' });
     }
@@ -19,7 +34,10 @@ const getOrderById = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        res.status(200).json(order);
+        res.status(200).json({
+            ...order.toObject(),
+            novaPoshtaBranchDetails: order.novaPoshtaBranchDetails || {},
+        });
     } catch (error) {
         res.status(500).json({ message: 'Помилка при отриманні замовлення' });
     }
@@ -46,8 +64,26 @@ const updateOrderStatus = async (req: Request, res: Response): Promise<void> => 
 
         res.status(200).json({ message: 'Статус замовлення оновлено' });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: 'Помилка при оновленні статусу замовлення' });
     }
 };
 
-export { getAllOrders, getOrderById, updateOrderStatus };
+const deleteOrder = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { orderId } = req.params;
+        const order = await Order.findById(orderId);
+
+        if (!order) {
+            res.status(404).json({ message: 'Замовлення не знайдено' });
+            return;
+        }
+
+        await Order.findByIdAndDelete(orderId);
+        res.status(200).json({ message: 'Замовлення видалено' });
+    } catch (error) {
+        res.status(500).json({ message: 'Помилка при видаленні замовлення' });
+    }
+};
+
+export { getAllOrders, getOrderById, updateOrderStatus, deleteOrder };

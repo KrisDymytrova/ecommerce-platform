@@ -3,7 +3,9 @@ import Category from '../../models/Category';
 
 const createCategory = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { name, image, description } = req.body;
+        console.log('User from token:', req.user);
+
+        const { name, image } = req.body;
         const userId = req.user?.userId;
 
         if (!userId) {
@@ -14,7 +16,6 @@ const createCategory = async (req: Request, res: Response): Promise<void> => {
         const category = new Category({
             name,
             image,
-            description,
             createdBy: userId
         });
 
@@ -33,6 +34,22 @@ const getCategories = async (req: Request, res: Response): Promise<void> => {
         res.status(200).json(categories);
     } catch (error) {
         res.status(500).json({ message: 'Помилка при отриманні категорій', error: (error as Error).message });
+    }
+};
+
+const getCategoryById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const category = await Category.findById(id);
+
+        if (!category) {
+            res.status(404).json({ message: 'Категорія не знайдена' });
+            return;
+        }
+
+        res.status(200).json(category);
+    } catch (error) {
+        res.status(500).json({ message: 'Помилка при отриманні категорії', error: (error as Error).message });
     }
 };
 
@@ -64,4 +81,4 @@ const deleteCategory = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-export { createCategory, getCategories, updateCategory, deleteCategory };
+export { createCategory, getCategories, getCategoryById, updateCategory, deleteCategory };

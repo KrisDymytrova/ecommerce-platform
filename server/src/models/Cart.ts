@@ -10,7 +10,7 @@ interface ICart extends Document {
     user: Schema.Types.ObjectId;
     items: ICartItem[];
     totalPrice: number;
-    calculateTotalPrice: () => Promise<number>; // Добавляем тип для метода
+    calculateTotalPrice: () => Promise<number>;
 }
 
 const cartItemSchema = new Schema<ICartItem>({

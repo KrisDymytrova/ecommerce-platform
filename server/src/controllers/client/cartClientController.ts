@@ -68,6 +68,33 @@ const removeFromCart = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+const clearCart = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            res.status(400).json({ message: 'Необхідна авторизація для очищення кошика' });
+            return;
+        }
+
+        const cart = await Cart.findOne({ user: userId });
+
+        if (!cart) {
+            res.status(404).json({ message: 'Кошик порожній' });
+            return;
+        }
+
+        cart.items = [];
+
+        cart.totalPrice = 0;
+
+        await cart.save();
+        res.status(200).json({ message: 'Кошик очищено' });
+    } catch (error) {
+        res.status(500).json({ message: 'Помилка при очищенні кошика' });
+    }
+};
+
 const getCart = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = req.user?.userId;
@@ -89,4 +116,4 @@ const getCart = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-export { addToCart, removeFromCart, getCart };
+export { addToCart, removeFromCart, clearCart, getCart };

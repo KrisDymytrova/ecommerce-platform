@@ -10,14 +10,14 @@ if (!JWT_SECRET) {
     throw new Error('JWT_SECRET is not defined');
 }
 
-const generateAccessToken = (userId: string): string => {
-    return jwt.sign({ userId, role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
+const generateAccessToken = (userId: string, role: string): string => {
+    return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '1h' });
 };
 
-const generateRefreshToken = async (userId: string): Promise<string> => {
+const generateRefreshToken = async (userId: string, role: string): Promise<string> => {
     await RefreshToken.deleteMany({ user: userId });
 
-    const refreshToken = jwt.sign({ userId, role: 'admin' }, JWT_SECRET, { expiresIn: '7d' });
+    const refreshToken = jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '7d' });
 
     const newRefreshToken = new RefreshToken({
         token: refreshToken,
@@ -39,8 +39,8 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        const accessToken = generateAccessToken(admin._id.toString());
-        const refreshToken = await generateRefreshToken(admin._id.toString());
+        const accessToken = generateAccessToken(admin._id.toString(), admin.role);
+        const refreshToken = await generateRefreshToken(admin._id.toString(), admin.role);
 
         res.status(200).json({ accessToken, refreshToken });
     } catch (error) {

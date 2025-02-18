@@ -1,6 +1,10 @@
 import express from 'express';
-import { adminLogin, adminRefreshToken, adminLogout } from '../../controllers/admin/authAdminController';
 import { authMiddleware } from '../../middlewares/authMiddleware';
+import {
+    adminLogin,
+    adminRefreshToken,
+    adminLogout
+} from '../../controllers/admin/authAdminController';
 
 const router = express.Router();
 

@@ -3,30 +3,38 @@ import { Schema, model, Document } from 'mongoose';
 interface IOrderItem {
     product: Schema.Types.ObjectId;
     quantity: number;
-    price: number;
 }
 
 interface IOrder extends Document {
     user: Schema.Types.ObjectId;
-    items: IOrderItem[];
+    products: IOrderItem[];
     totalPrice: number;
-    shippingAddress: string;
-    deliveryOffice: string;
+    novaPoshtaBranch: string;
+    novaPoshtaBranchDetails: {
+        branchRef: string;
+        description: string;
+        cityRef: string;
+        cityName: string;
+    };
     status: string;
 }
 
 const orderItemSchema = new Schema<IOrderItem>({
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, min: 1 },
-    price: { type: Number, required: true },
 });
 
 const orderSchema = new Schema<IOrder>({
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    items: [orderItemSchema],
+    products: [orderItemSchema],
     totalPrice: { type: Number, required: true, default: 0 },
-    shippingAddress: { type: String, required: true },
-    deliveryOffice: { type: String, required: true },
+    novaPoshtaBranch: { type: String, required: true },
+    novaPoshtaBranchDetails: {
+        branchRef: { type: String, required: true },
+        description: { type: String, required: true },
+        cityRef: { type: String, required: true },
+        cityName: { type: String, required: true },
+    },
     status: { type: String, required: true, default: 'new' },
 }, { timestamps: true });
 

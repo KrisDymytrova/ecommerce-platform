@@ -1,33 +1,43 @@
 import { Router } from 'express';
-import clientAuthRoutes from './client/authClientRoutes';
-import adminAuthRoutes from './admin/authAdminRoutes';
-import cartClientRoutes from './client/cartClientRoutes';
-import orderClientRoutes from './client/orderClientRoutes';
-import orderAdminRoutes from './admin/orderAdminRoutes';
-import productClientRoutes from './client/productClientRoutes';
-import productAdminRoutes from './admin/productAdminRoutes';
-import categoryClientRoutes from './client/categoryClientRoutes';
-import categoryAdminRoutes from './admin/categoryAdminRoutes';
-import userClientRoutes from './client/userClientRoutes';
-import userAdminRoutes from './admin/userAdminRoutes';
+
+// Клієнтські маршрути
+import auth from './client/authClientRoutes';
+import cart from './client/cartClientRoutes';
+import orders from './client/ordersClientRoutes';
+import products from './client/productsClientRoutes';
+import categories from './client/categoriesClientRoutes';
+import profile from './client/profileClientRoutes';
+import favorites from './client/favoritesClientRoutes';
+
+// Адмінські маршрути
+import adminAuth from './admin/authAdminRoutes';
+import adminOrders from './admin/ordersAdminRoutes';
+import adminProducts from './admin/productsAdminRoutes';
+import adminCategories from './admin/categoriesAdminRoutes';
+import adminUsers from './admin/usersAdminRoutes';
+
+// Маршрути для роботи з Новою Поштою
+import novaPoshtaRoutes from './novaPoshtaRoutes';
 
 const router = Router();
 
-router.use('/auth/client', clientAuthRoutes);
-router.use('/auth/admin', adminAuthRoutes);
+// Клієнтські маршрути
+router.use('/auth', auth);
+router.use('/cart', cart);
+router.use('/orders', orders);
+router.use('/products', products);
+router.use('/categories', categories);
+router.use('/profile', profile);
+router.use('/favorites', favorites);
 
-router.use('/cart/client', cartClientRoutes);
+// Адмінські маршрути
+router.use('/admin/auth', adminAuth);
+router.use('/admin/orders', adminOrders);
+router.use('/admin/products', adminProducts);
+router.use('/admin/categories', adminCategories);
+router.use('/admin/users', adminUsers);
 
-router.use('/order/client', orderClientRoutes);
-router.use('/order/admin', orderAdminRoutes);
-
-router.use('/product/client', productClientRoutes);
-router.use('/product/admin', productAdminRoutes);
-
-router.use('/category/client', categoryClientRoutes);
-router.use('/category/admin', categoryAdminRoutes);
-
-router.use('/user/client', userClientRoutes);
-router.use('/user/admin', userAdminRoutes);
+// Маршрути для Нової Пошти
+router.use('/nova-poshta', novaPoshtaRoutes);
 
 export default router;

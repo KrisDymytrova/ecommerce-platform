@@ -21,12 +21,36 @@ const getProducts = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+const getProductById = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const product = await Product.findById(id);
+
+        if (!product) {
+            res.status(404).json({ message: 'Товар не знайдений' });
+            return;
+        }
+
+        res.status(200).json(product);
+    } catch (error) {
+        res.status(500).json({ message: 'Помилка при отриманні товару', error: (error as Error).message });
+    }
+};
+
 const updateProduct = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
+        console.log('Updating product with ID:', id);
         const updatedProduct = await Product.findByIdAndUpdate(id, req.body, { new: true });
+
+        if (!updatedProduct) {
+            res.status(404).json({ message: 'Товар не знайдений' });
+            return;
+        }
+
         res.status(200).json(updatedProduct);
     } catch (error) {
+        console.error('Error while updating product:', error);
         res.status(500).json({ message: 'Помилка при оновленні товару' });
     }
 };
@@ -41,4 +65,4 @@ const deleteProduct = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-export { createProduct, getProducts, updateProduct, deleteProduct };
+export { createProduct, getProducts, getProductById, updateProduct, deleteProduct };

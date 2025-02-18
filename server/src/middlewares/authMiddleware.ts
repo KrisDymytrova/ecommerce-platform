@@ -34,15 +34,17 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     }
 };
 
-export const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const adminMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-        return res.status(403).json({ message: 'Недійсний токен або відсутній користувач' });
+        res.status(403).json({ message: 'Недійсний токен або відсутній користувач' });
+        return;
     }
 
     console.log('User role:', req.user.role);
 
     if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Доступ заборонено' });
+        res.status(403).json({ message: 'Доступ заборонено' });
+        return;
     }
 
     next();
