@@ -1,10 +1,16 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true
-  }
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "types": ["vite/client", "react", "react-dom", "tailwindcss"]
+  },
+  "include": [
+    "src/**/*",
+    "node_modules/tailwindcss/**/*.d.ts"
+  ]
 }
