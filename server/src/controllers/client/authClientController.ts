@@ -30,18 +30,21 @@ const generateRefreshToken = async (userId: string): Promise<string> => {
 
 export const clientRegister = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, role } = req.body;
 
         if (await User.findOne({ email })) {
             res.status(400).json({ message: 'Email вже використовується' });
             return;
         }
 
+        const validRoles = ['user', 'admin'];
+        const userRole = validRoles.includes(role) ? role : 'user';
+
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, email, password: hashedPassword, role: 'user' });
+        const newUser = new User({ username, email, password: hashedPassword, role: userRole });
         await newUser.save();
 
-        res.status(201).json({ message: 'Користувач створений успішно' });
+        res.status(201).json({ message: `Користувач створений успішно з роллю: ${userRole}` });
     } catch (error) {
         res.status(500).json({ message: 'Помилка сервера', error: (error as Error).message });
     }
