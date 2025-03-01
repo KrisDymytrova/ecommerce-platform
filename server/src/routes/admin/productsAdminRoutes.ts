@@ -12,8 +12,8 @@ const router = express.Router();
 
 router.post('/create-product', authMiddleware, adminMiddleware, createProduct);
 router.get('/', authMiddleware, adminMiddleware, getProducts);
-router.get('/product/:id', authMiddleware, adminMiddleware, getProductById);
-router.put('/product/:id', authMiddleware, adminMiddleware, updateProduct);
-router.delete('/product/:id', authMiddleware, adminMiddleware, deleteProduct);
+router.get('/:id', authMiddleware, adminMiddleware, getProductById);
+router.put('/:id', authMiddleware, adminMiddleware, updateProduct);
+router.delete('/:id', authMiddleware, adminMiddleware, deleteProduct);
 
 export default router;

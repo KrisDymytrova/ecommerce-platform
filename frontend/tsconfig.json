@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ES2015", "DOM"],
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "types": ["vite/client", "react", "react-dom", "tailwindcss"],
+    "useDefineForClassFields": false
+  },
+  "include": [
+    "src/**/*",
+    "node_modules/tailwindcss/**/*.d.ts"
+  ]
+}

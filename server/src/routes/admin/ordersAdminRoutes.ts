@@ -4,14 +4,16 @@ import {
     getAllOrders,
     getOrderById,
     updateOrderStatus,
+    updateOrder,
     deleteOrder
 } from '../../controllers/admin/ordersAdminController';
 
 const router = express.Router();
 
 router.get('/', authMiddleware, adminMiddleware, getAllOrders);
-router.get('/order/:orderId', authMiddleware, adminMiddleware, getOrderById);
-router.patch('/order/:orderId', authMiddleware, adminMiddleware, updateOrderStatus);
-router.delete('/order/:orderId', authMiddleware, adminMiddleware, deleteOrder);
+router.get('/:orderId', authMiddleware, adminMiddleware, getOrderById);
+router.patch('/:orderId/status', authMiddleware, adminMiddleware, updateOrderStatus);
+router.put("/:orderId", authMiddleware, adminMiddleware, updateOrder);
+router.delete('/:orderId', authMiddleware, adminMiddleware, deleteOrder);
 
 export default router;

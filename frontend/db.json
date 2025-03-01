@@ -1,0 +1,20 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "title": "Смартфон Apple iPhone 15",
+      "price": 1099,
+      "description": "Новий iPhone з покращеною камерою.",
+      "category": "smartphones",
+      "image": "https://via.placeholder.com/150"
+    },
+    {
+      "id": 2,
+      "title": "Ноутбук ASUS ROG",
+      "price": 1999,
+      "description": "Геймерський ноутбук із потужним залізом.",
+      "category": "laptops",
+      "image": "https://via.placeholder.com/150"
+    }
+  ]
+}
