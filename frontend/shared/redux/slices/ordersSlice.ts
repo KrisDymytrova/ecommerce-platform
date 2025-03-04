@@ -1,48 +1,54 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { getApiUrl } from "../../apiConfig";
-import { getAuthHeaders } from "../../../admin/src/utils/authUtils";
 import { Order, OrdersState } from "../../types/order";
+import {
+    getOrders,
+    updateOrderStatus,
+    deleteOrder,
+} from "../../../admin/src/api/apiService";
 
 // 📌 Получить все заказы
 export const fetchOrders = createAsyncThunk<Order[], void>(
     "orders/fetchOrders",
     async () => {
-        const API_URL = await getApiUrl();
         try {
-            const response = await axios.get(`${API_URL}/admin/orders`, {
-                headers: getAuthHeaders(),
-            });
+            const response = await getOrders();
+            console.log("📌 Запрос на получение заказов отправлен:", response.config.url);
+            console.log("✅ Заказы загружены:", response.data);
             return response.data;
         } catch (error) {
-            console.error("Error fetching orders:", error);
+            console.error("❌ Ошибка при получении заказов:", error);
             throw error;
         }
     }
 );
 
 // 📌 Обновить статус заказа
-export const updateOrderStatus = createAsyncThunk<Order, { id: string; status: string }>(
+export const updateOrderStatusAction = createAsyncThunk<Order, { id: string; status: string }>(
     "orders/updateOrderStatus",
     async ({ id, status }) => {
-        const API_URL = await getApiUrl();
-        const response = await axios.put(
-            `${API_URL}/admin/orders/${id}`,
-            { status },
-            { headers: getAuthHeaders() }
-        );
-        return response.data;
+        try {
+            const response = await updateOrderStatus(id, { status });
+            console.log("✅ Статус заказа обновлен:", response.data);
+            return response.data;
+        } catch (error: any) {
+            console.error("❌ Ошибка при обновлении статуса заказа:", error);
+            throw new Error(error.response?.data?.message || "Не удалось обновить статус заказа");
+        }
     }
 );
 
 // 📌 Удалить заказ
-export const deleteOrder = createAsyncThunk<void, string>(
+export const deleteOrderAction = createAsyncThunk<string, string>(
     "orders/deleteOrder",
-    async (id) => {
-        const API_URL = await getApiUrl();
-        await axios.delete(`${API_URL}/admin/orders/${id}`, {
-            headers: getAuthHeaders(),
-        });
+    async (id, { rejectWithValue }) => {
+        try {
+            await deleteOrder(id);
+            console.log(`✅ Заказ ${id} удален`);
+            return id; // Возвращаем id удаленного заказа
+        } catch (error: any) {
+            console.error("❌ Ошибка при удалении заказа:", error);
+            return rejectWithValue("Не удалось удалить заказ");
+        }
     }
 );
 
@@ -67,18 +73,24 @@ const ordersSlice = createSlice({
             })
             .addCase(fetchOrders.rejected, (state, action) => {
                 state.status = "failed";
-                state.error = action.error.message ?? "Failed to load orders.";
+                state.error = action.error.message ?? "Ошибка при загрузке заказов";
             })
 
-            .addCase(updateOrderStatus.fulfilled, (state, action) => {
+            .addCase(updateOrderStatusAction.fulfilled, (state, action) => {
                 const index = state.items.findIndex((order) => order._id === action.payload._id);
                 if (index !== -1) {
                     state.items[index] = action.payload;
                 }
             })
+            .addCase(updateOrderStatusAction.rejected, (state, action) => {
+                state.error = action.error.message ?? "Ошибка при обновлении статуса заказа";
+            })
 
-            .addCase(deleteOrder.fulfilled, (state, action) => {
-                state.items = state.items.filter((order) => order._id !== action.meta.arg);
+            .addCase(deleteOrderAction.fulfilled, (state, action) => {
+                state.items = state.items.filter((order) => order._id !== action.payload);
+            })
+            .addCase(deleteOrderAction.rejected, (state, action) => {
+                state.error = action.error.message ?? "Ошибка при удалении заказа";
             });
     },
 });

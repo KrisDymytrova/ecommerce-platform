@@ -1,23 +1,38 @@
 import * as React from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../../../shared/redux/store';
 import { addCategory } from '../../../../shared/redux/slices/categoriesSlice';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { categoryValidationSchema } from '../../utils/validationsSchemas/categoryValidation';
+import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const CreateCategory: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
 
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+
     const handleCreate = async (values: { name: string; image: string }) => {
         try {
-            const resultAction = await dispatch(addCategory(values)).unwrap();
-            console.log('Category created:', resultAction);
-            navigate('/categories');
+            const actionResult = await dispatch(addCategory(values));
+            if (addCategory.fulfilled.match(actionResult)) {
+                setSnackbarMessage('Category created successfully');
+                setSnackbarType('success');
+                setSnackbarOpen(true);
+                setTimeout(() => navigate('/categories'), 1000);
+            } else {
+                setSnackbarMessage('Failed to create category.');
+                setSnackbarType('error');
+                setSnackbarOpen(true);
+            }
         } catch (error) {
-            console.error('Error creating category:', error);
-            alert('Failed to create category. Please try again.');
+            setSnackbarMessage('Failed to create category.');
+            setSnackbarType('error');
+            setSnackbarOpen(true);
         }
     };
 
@@ -59,9 +74,15 @@ const CreateCategory: React.FC = () => {
                     </Form>
                 )}
             </Formik>
+
+            <Snackbar
+                open={snackbarOpen}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+                type={snackbarType}
+            />
         </div>
     );
 };
 
 export default CreateCategory;
-

@@ -1,34 +1,46 @@
-import * as React from "react";
-import { Formik, Field, Form, ErrorMessage } from 'formik';
+import * as React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { User } from "../../../../shared/types/User";
-import { getAuthHeaders } from "../../utils/authUtils";
-import { getApiUrl } from "../../../../shared/apiConfig";
-import { userValidationSchema } from "../../utils/validationsSchemas/userValidation";
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../../../shared/redux/store';
+import { addUser } from '../../../../shared/redux/slices/usersSlice';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { createUserValidationSchema } from '../../utils/validationsSchemas/userValidation';
+import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const CreateUser: React.FC = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
 
-    const handleSubmit = async (values: any, { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }) => {
-        const { email, username, role } = values;
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
 
-        const newUser = {
-            email,
-            username,
-            role,
-        };
-
+    const handleCreate = async (values: { email: string; username: string; password: string; role: string }) => {
         try {
-            const API_URL = await getApiUrl();
-            await axios.post(`${API_URL}/admin/users/create-user`, newUser, {
-                headers: getAuthHeaders(),
-            });
-            navigate('/users');  // Перенаправляем на страницу списка пользователей
-        } catch (err) {
-            console.error("Error creating the user", err);
-        } finally {
-            setSubmitting(false);
+            const actionResult = await dispatch(addUser(values));
+
+            if (addUser.fulfilled.match(actionResult)) {
+                console.log('✅ User created:', actionResult.payload);
+
+                setSnackbarMessage('User created successfully!');
+                setSnackbarType('success');
+                setSnackbarOpen(true);
+
+                setTimeout(() => navigate('/users'), 1000);
+            } else {
+                console.error('❌ Ошибка при добавлении пользователя:', actionResult.error.message);
+
+                setSnackbarMessage('Failed to create user. Please try again.');
+                setSnackbarType('error');
+                setSnackbarOpen(true);
+            }
+        } catch (error) {
+            console.error('❌ Ошибка при добавлении пользователя:', error);
+
+            setSnackbarMessage('Failed to create user. Please try again.');
+            setSnackbarType('error');
+            setSnackbarOpen(true);
         }
     };
 
@@ -40,10 +52,11 @@ const CreateUser: React.FC = () => {
                 initialValues={{
                     email: '',
                     username: '',
-                    role: 'user', // Устанавливаем роль по умолчанию
+                    password: '',
+                    role: 'user',
                 }}
-                validationSchema={userValidationSchema} // Используем схему валидации для пользователя
-                onSubmit={handleSubmit}
+                validationSchema={createUserValidationSchema}
+                onSubmit={handleCreate}
             >
                 {({ isSubmitting }) => (
                     <Form>
@@ -72,6 +85,18 @@ const CreateUser: React.FC = () => {
                         </div>
 
                         <div className="mb-4">
+                            <label htmlFor="password" className="block text-gray-700">Password</label>
+                            <Field
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Password"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                            <ErrorMessage name="password" component="div" className="text-red-500 text-sm" />
+                        </div>
+
+                        <div className="mb-4">
                             <label htmlFor="role" className="block text-gray-700">Role</label>
                             <Field
                                 as="select"
@@ -97,6 +122,13 @@ const CreateUser: React.FC = () => {
                     </Form>
                 )}
             </Formik>
+
+            <Snackbar
+                open={snackbarOpen}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+                type={snackbarType}
+            />
         </div>
     );
 };

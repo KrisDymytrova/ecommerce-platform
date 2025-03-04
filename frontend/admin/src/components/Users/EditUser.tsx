@@ -1,52 +1,73 @@
-import * as React from "react";
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import { User } from "../../../../shared/types/User";
-import { getAuthHeaders } from "../../utils/authUtils";
-import { getApiUrl } from "../../../../shared/apiConfig";
-import { userValidationSchema } from "../../utils/validationsSchemas/userValidation";
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../../../shared/redux/store';
+import { fetchUserById, updateUserAction } from '../../../../shared/redux/slices/usersSlice';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { editUserValidationSchema } from '../../utils/validationsSchemas/userValidation';
+import { User } from '../../../../shared/types/User';
+import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const EditUser: React.FC = () => {
     const { id } = useParams();
+    const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
+
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+
     useEffect(() => {
-        if (id && !user) {
-            fetchUser(id);
-        }
-    }, [id, user]);
+        const fetchUser = async () => {
+            if (id) {
+                try {
+                    const actionResult = await dispatch(fetchUserById(id));
+                    if (fetchUserById.fulfilled.match(actionResult)) {
+                        setUser(actionResult.payload);
+                    } else {
+                        setError('User not found');
+                    }
+                } catch (err) {
+                    setError('User could not be loaded.');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
 
-    const fetchUser = async (id: string) => {
-        try {
-            const API_URL = await getApiUrl();
-            const response = await axios.get(`${API_URL}/admin/users/${id}`, { headers: getAuthHeaders() });
-            setUser(response.data);
-        } catch (err) {
-            console.error("Error fetching user:", err);  // Логирование ошибки
-            setError("User could not be loaded.");
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchUser();
+    }, [id, dispatch]);
 
-    const handleSave = async (values: { name: string; email: string; role: string }) => {
+    const handleSave = async (values: { name: string; email: string; role: string; }) => {
         if (!id) return;
 
         try {
-            const API_URL = await getApiUrl();
-            await axios.put(
-                `${API_URL}/admin/users/${id}`,
-                { name: values.name, email: values.email, role: values.role },
-                { headers: getAuthHeaders() }
-            );
-            navigate("/users");
+            const actionResult = await dispatch(updateUserAction({
+                id,
+                email: values.email,
+                username: values.name,
+                role: values.role,
+            }));
+
+            if (updateUserAction.fulfilled.match(actionResult)) {
+                setSnackbarMessage("User updated successfully");
+                setSnackbarType("success");
+                setSnackbarOpen(true);
+                setTimeout(() => navigate("/users"), 1000);
+            } else {
+                setSnackbarMessage("Error updating user");
+                setSnackbarType("error");
+                setSnackbarOpen(true);
+            }
         } catch (err) {
-            setError("Failed to update user.");
+            setSnackbarMessage("Error updating user");
+            setSnackbarType("error");
+            setSnackbarOpen(true);
         }
     };
 
@@ -59,8 +80,9 @@ const EditUser: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4">Edit User</h2>
             <Formik
                 initialValues={{ name: user.username, email: user.email, role: user.role }}
-                validationSchema={userValidationSchema}
+                validationSchema={editUserValidationSchema}
                 onSubmit={handleSave}
+                enableReinitialize
             >
                 {({ isSubmitting }) => (
                     <Form>
@@ -104,6 +126,13 @@ const EditUser: React.FC = () => {
                     </Form>
                 )}
             </Formik>
+
+            <Snackbar
+                open={snackbarOpen}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+                type={snackbarType}
+            />
         </div>
     );
 };

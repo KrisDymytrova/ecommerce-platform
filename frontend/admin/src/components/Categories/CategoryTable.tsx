@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
-import Table from "../../../src/components/UI/Table";
-import Button from "../../../src/components/UI/Button";
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchCategories, deleteCategory } from '../../../../shared/redux/slices/categoriesSlice';
-import { RootState, AppDispatch } from '../../../../shared/redux/store';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ConfirmationModal from "../../../../shared/components/UI/ConfirmationModal";
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '../../../../shared/redux/store';
+import { fetchCategories, deleteCategoryAction } from '../../../../shared/redux/slices/categoriesSlice';
+import Table from '../../../src/components/UI/Table';
+import Button from '../../../src/components/UI/Button';
+import ConfirmationModal from '../../../../shared/components/UI/ConfirmationModal';
 import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const CategoryTable: React.FC = () => {
@@ -20,17 +20,31 @@ const CategoryTable: React.FC = () => {
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const isFetched = useRef(false);
 
     useEffect(() => {
-        if (status === 'idle') {
+        if (!isFetched.current && status === 'idle') {
             dispatch(fetchCategories());
+            isFetched.current = true;
         }
     }, [dispatch, status]);
 
+    const handleCreate = () => {
+        navigate('/categories/create-category');
+    };
+
+    const handleEdit = (id: string) => {
+        navigate(`/categories/edit/${id}`);
+    };
+
     const handleDelete = async () => {
-        if (!selectedCategoryId) return;
+        if (!selectedCategoryId || isDeleting) return;
+        setIsDeleting(true);
+
         try {
-            await dispatch(deleteCategory(selectedCategoryId)).unwrap();
+            await dispatch(deleteCategoryAction(selectedCategoryId)).unwrap();
             setSnackbarMessage('Category deleted successfully');
             setSnackbarType('success');
             setOpenSnackbar(true);
@@ -41,16 +55,13 @@ const CategoryTable: React.FC = () => {
         } finally {
             setIsModalOpen(false);
             setSelectedCategoryId(null);
+            setIsDeleting(false);
         }
     };
 
     const openDeleteModal = (id: string) => {
         setSelectedCategoryId(id);
         setIsModalOpen(true);
-    };
-
-    const handleEdit = (id: string) => {
-        navigate(`/categories/edit/${id}`);
     };
 
     if (status === 'loading') return <p>Loading categories...</p>;
@@ -60,7 +71,7 @@ const CategoryTable: React.FC = () => {
         <div className="p-6 bg-white rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Categories</h2>
             <div className="mb-4">
-                <Button variant="primary" size="sm" onClick={() => navigate('/categories/create')}>
+                <Button variant="primary" size="sm" onClick={handleCreate}>
                     Create Category
                 </Button>
             </div>
@@ -94,7 +105,12 @@ const CategoryTable: React.FC = () => {
                                 <Button variant="outline" size="sm" onClick={() => handleEdit(category._id)}>
                                     Edit
                                 </Button>
-                                <Button variant="danger" size="sm" onClick={() => openDeleteModal(category._id)}>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => openDeleteModal(category._id)}
+                                    disabled={isDeleting}
+                                >
                                     Delete
                                 </Button>
                             </td>
@@ -118,6 +134,7 @@ const CategoryTable: React.FC = () => {
             />
 
             <Snackbar
+                key={snackbarMessage}
                 open={openSnackbar}
                 onClose={() => setOpenSnackbar(false)}
                 message={snackbarMessage}

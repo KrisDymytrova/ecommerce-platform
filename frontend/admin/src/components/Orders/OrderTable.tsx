@@ -12,6 +12,7 @@ import { getApiUrl } from "../../../../shared/apiConfig";
 import ConfirmationModal from "../../../../shared/components/UI/ConfirmationModal";
 import Select from "react-select";
 import { Order } from "../../../../shared/types/Order";
+import Snackbar from "../../../../shared/components/UI/Snackbar"; // Импортируем Snackbar
 
 const OrderTable: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -21,6 +22,10 @@ const OrderTable: React.FC = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
     useEffect(() => {
         if (status === "idle") {
@@ -36,8 +41,13 @@ const OrderTable: React.FC = () => {
                 headers: getAuthHeaders(),
             });
             dispatch(fetchOrders());
+            setSnackbarMessage('Order deleted successfully');
+            setSnackbarType('success');
+            setOpenSnackbar(true);
         } catch (error) {
-            alert("Помилка при видаленні замовлення");
+            setSnackbarMessage('Error deleting the order');
+            setSnackbarType('error');
+            setOpenSnackbar(true);
         } finally {
             setIsModalOpen(false);
             setSelectedOrderId(null);
@@ -54,6 +64,8 @@ const OrderTable: React.FC = () => {
     };
 
     const handleStatusChange = async (orderId: string, newStatus: string) => {
+        if (isUpdatingStatus) return; // предотвращаем несколько запросов
+        setIsUpdatingStatus(true);
         try {
             const API_URL = await getApiUrl();
             await axios.patch(
@@ -62,8 +74,15 @@ const OrderTable: React.FC = () => {
                 { headers: getAuthHeaders() }
             );
             dispatch(fetchOrders());
+            setSnackbarMessage('Order status updated successfully');
+            setSnackbarType('success');
+            setOpenSnackbar(true);
         } catch (error) {
-            alert("Помилка при оновленні статусу замовлення");
+            setSnackbarMessage('Error updating order status');
+            setSnackbarType('error');
+            setOpenSnackbar(true);
+        } finally {
+            setIsUpdatingStatus(false);
         }
     };
 
@@ -121,6 +140,13 @@ const OrderTable: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleDelete}
                 message="Ви впевнені, що хочете видалити це замовлення?"
+            />
+
+            <Snackbar
+                open={openSnackbar}
+                onClose={() => setOpenSnackbar(false)}
+                message={snackbarMessage}
+                type={snackbarType}
             />
         </div>
     );

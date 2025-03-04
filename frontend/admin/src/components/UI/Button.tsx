@@ -5,9 +5,10 @@ interface ButtonProps {
     onClick?: () => void;
     variant?: 'primary' | 'outline' | 'danger';
     size?: 'sm' | 'md' | 'lg';
+    disabled?: boolean;
 }
 
-const Button: React.FC<ButtonProps> = ({ children, onClick, variant = 'primary', size = 'md' }) => {
+const Button: React.FC<ButtonProps> = ({ children, onClick, disabled = false, variant = 'primary', size = 'md' }) => {
     const baseClasses = 'inline-flex items-center justify-center rounded-lg font-semibold focus:outline-none transition-all duration-300';
 
     const variantClasses = {
@@ -25,6 +26,7 @@ const Button: React.FC<ButtonProps> = ({ children, onClick, variant = 'primary',
     return (
         <button
             onClick={onClick}
+            disabled={disabled}
             className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]}`}
         >
             {children}

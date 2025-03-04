@@ -2,14 +2,12 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import Table from "../../../src/components/UI/Table";
 import Button from "../../../src/components/UI/Button";
-import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchProducts, deleteProduct } from '../../../../shared/redux/slices/productsSlice';
+import { fetchProducts, deleteProductAction } from '../../../../shared/redux/slices/productsSlice';
 import { RootState, AppDispatch } from '../../../../shared/redux/store';
-import { getAuthHeaders } from '../../utils/authUtils';
 import { useNavigate } from 'react-router-dom';
-import { getApiUrl } from "../../../../shared/apiConfig";
 import ConfirmationModal from "../../../../shared/components/UI/ConfirmationModal";
+import Snackbar from "../../../../shared/components/UI/Snackbar"; // Импортируем Snackbar
 
 const ProductTable: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -19,6 +17,10 @@ const ProductTable: React.FC = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (status === 'idle') {
@@ -27,14 +29,22 @@ const ProductTable: React.FC = () => {
     }, [dispatch, status]);
 
     const handleDelete = async () => {
-        if (!selectedProductId) return;
+        if (!selectedProductId || isDeleting) return;
+        setIsDeleting(true);
+
         try {
-            await dispatch(deleteProduct(selectedProductId));
+            await dispatch(deleteProductAction(selectedProductId));
+            setSnackbarMessage('Product deleted successfully');
+            setSnackbarType('success');
+            setOpenSnackbar(true);
         } catch (error) {
-            alert("Error deleting the product");
+            setSnackbarMessage('Error deleting the product');
+            setSnackbarType('error');
+            setOpenSnackbar(true);
         } finally {
             setIsModalOpen(false);
             setSelectedProductId(null);
+            setIsDeleting(false);
         }
     };
 
@@ -47,8 +57,6 @@ const ProductTable: React.FC = () => {
         navigate(`/products/edit/${id}`);
     };
 
-    // Удален handleCreate
-
     if (status === 'loading') return <p>Loading products...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
@@ -56,7 +64,7 @@ const ProductTable: React.FC = () => {
         <div className="p-6 bg-white rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Products</h2>
             <div className="mb-4">
-                <Button variant="primary" size="sm" onClick={() => navigate('/products/create')}>
+                <Button variant="primary" size="sm" onClick={() => navigate('/products/create-product')}>
                     Create Product
                 </Button>
             </div>
@@ -101,6 +109,13 @@ const ProductTable: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleDelete}
                 message="Are you sure you want to delete this product?"
+            />
+
+            <Snackbar
+                open={openSnackbar}
+                onClose={() => setOpenSnackbar(false)}
+                message={snackbarMessage}
+                type={snackbarType}
             />
         </div>
     );

@@ -16,7 +16,7 @@ app.use(cors({
         "http://localhost:3000", // Фронтенд
         "http://localhost:3001", // Админ-панель
     ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 

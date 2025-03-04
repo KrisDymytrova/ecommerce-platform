@@ -10,7 +10,7 @@ import {
 
 const router = express.Router();
 
-router.post('/create', authMiddleware, adminMiddleware, createCategory);
+router.post('/create-category', authMiddleware, adminMiddleware, createCategory);
 router.get('/', authMiddleware, adminMiddleware, getCategories);
 router.get('/:id', authMiddleware, adminMiddleware, getCategoryById);
 router.put('/:id', authMiddleware, adminMiddleware, updateCategory);

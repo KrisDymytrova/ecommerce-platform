@@ -11,4 +11,5 @@ export interface CategoriesState {
     items: Category[];
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
     error: string | null;
+    currentCategory: Category | null;
 }

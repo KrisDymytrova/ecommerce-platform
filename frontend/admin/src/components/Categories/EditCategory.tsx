@@ -1,54 +1,68 @@
-import * as React from "react";
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import { Category } from "../../../../shared/types/Category";
-import { getAuthHeaders } from "../../utils/authUtils";
-import { getApiUrl } from "../../../../shared/apiConfig";
-import { categoryValidationSchema } from "../../utils/validationsSchemas/categoryValidation";
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../../../shared/redux/store';
+import { fetchCategoryById, updateCategoryAction } from '../../../../shared/redux/slices/categoriesSlice';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { categoryValidationSchema } from '../../utils/validationsSchemas/categoryValidation';
+import { Category } from '../../../../shared/types/category';
+import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const EditCategory: React.FC = () => {
     const { id } = useParams();
+    const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
+
     const [category, setCategory] = useState<Category | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+
     useEffect(() => {
-        if (id) {
-            // Используем асинхронную функцию внутри useEffect
-            const fetchData = async () => {
+        const fetchCategory = async () => {
+            if (id) {
                 try {
-                    const API_URL = await getApiUrl();
-                    const response = await axios.get(`${API_URL}/categories/${id}`, {
-                        headers: getAuthHeaders(),
-                    });
-                    setCategory(response.data);
+                    const actionResult = await dispatch(fetchCategoryById(id));
+                    if (fetchCategoryById.fulfilled.match(actionResult)) {
+                        setCategory(actionResult.payload);
+                    } else {
+                        setError('Category not found');
+                    }
                 } catch (err) {
-                    setError("The category could not be loaded");
+                    setError('Category not found');
                 } finally {
                     setLoading(false);
                 }
-            };
+            }
+        };
 
-            fetchData(); // Вызываем асинхронную функцию
-        }
-    }, [id]); // Зависимость от id
+        fetchCategory();
+    }, [id, dispatch]);
 
     const handleSave = async (values: { name: string; image: string }) => {
         if (!id) return;
 
         try {
-            const API_URL = await getApiUrl();
-            await axios.put(
-                `${API_URL}/admin/categories/${id}`,
-                { name: values.name, image: values.image },
-                { headers: getAuthHeaders() }
-            );
-            navigate("/categories");
+            const actionResult = await dispatch(updateCategoryAction({ id, name: values.name, image: values.image }));
+
+            if (updateCategoryAction.fulfilled.match(actionResult)) {
+                setSnackbarMessage("Category updated successfully");
+                setSnackbarType("success");
+                setSnackbarOpen(true);
+                setTimeout(() => navigate("/categories"), 1000);
+            } else {
+                setSnackbarMessage("Failed to update category.");
+                setSnackbarType("error");
+                setSnackbarOpen(true);
+            }
         } catch (err) {
-            setError("Failed to update category.");
+            setSnackbarMessage("Failed to update category.");
+            setSnackbarType("error");
+            setSnackbarOpen(true);
         }
     };
 
@@ -94,6 +108,13 @@ const EditCategory: React.FC = () => {
                     </Form>
                 )}
             </Formik>
+
+            <Snackbar
+                open={snackbarOpen}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+                type={snackbarType}
+            />
         </div>
     );
 };

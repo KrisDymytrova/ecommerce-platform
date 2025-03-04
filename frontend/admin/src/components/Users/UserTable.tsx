@@ -1,15 +1,13 @@
-import * as React from "react";
-import { useEffect, useState } from "react";
-import Table from "../../../src/components/UI/Table";
-import Button from "../../../src/components/UI/Button";
-import axios from "axios";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchUsers, deleteUser } from "../../../../shared/redux/slices/usersSlice";
-import { RootState, AppDispatch } from "../../../../shared/redux/store";
-import { getAuthHeaders } from "../../utils/authUtils";
-import { useNavigate } from "react-router-dom";
-import { getApiUrl } from "../../../../shared/apiConfig";
-import ConfirmationModal from "../../../../shared/components/UI/ConfirmationModal";
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '../../../../shared/redux/store';
+import { fetchUsers, deleteUserAction } from '../../../../shared/redux/slices/usersSlice';
+import Table from '../../../src/components/UI/Table';
+import Button from '../../../src/components/UI/Button';
+import ConfirmationModal from '../../../../shared/components/UI/ConfirmationModal';
+import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const UserTable: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -19,6 +17,10 @@ const UserTable: React.FC = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (status === "idle" && users.length === 0) {
@@ -26,47 +28,37 @@ const UserTable: React.FC = () => {
         }
     }, [dispatch, status, users.length]);
 
-    const handleDelete = async () => {
-        if (!selectedUserId) return;
-        try {
-            await dispatch(deleteUser(selectedUserId));
-        } catch (error) {
-            alert("Error deleting the user");
-        } finally {
-            setIsModalOpen(false);
-            setSelectedUserId(null);
-        }
-    };
-
-    const openDeleteModal = (id: string) => {
-        setSelectedUserId(id);
-        setIsModalOpen(true);
+    const handleCreate = () => {
+        navigate('/users/create-user');
     };
 
     const handleEdit = (id: string) => {
         navigate(`/users/edit/${id}`);
     };
 
-    const handleCreate = async () => {
-        if (status === 'loading') return; // Не робити запит, якщо дані завантажуються
-
-        const email = prompt("Enter email of the new user:");
-        const username = prompt("Enter username:");
-        const role = prompt("Enter the role (admin/user):");
-
-        if (!email || !username || !role) return;
+    const handleDelete = async () => {
+        if (!selectedUserId || isDeleting) return;
+        setIsDeleting(true);
 
         try {
-            const API_URL = await getApiUrl();
-            await axios.post(
-                `${API_URL}/admin/create-user`,
-                { email, username, role },
-                { headers: getAuthHeaders() }
-            );
-            dispatch(fetchUsers());
-        } catch (err) {
-            alert("Error creating the user");
+            await dispatch(deleteUserAction(selectedUserId));
+            setSnackbarMessage('User deleted successfully');
+            setSnackbarType('success');
+            setOpenSnackbar(true);
+        } catch (error) {
+            setSnackbarMessage('Error deleting the user');
+            setSnackbarType('error');
+            setOpenSnackbar(true);
+        } finally {
+            setIsModalOpen(false);
+            setSelectedUserId(null);
+            setIsDeleting(false);
         }
+    };
+
+    const openDeleteModal = (id: string) => {
+        setSelectedUserId(id);
+        setIsModalOpen(true);
     };
 
     if (status === "loading") return <p>Loading users...</p>;
@@ -87,7 +79,6 @@ const UserTable: React.FC = () => {
                     <th className="p-3">Email</th>
                     <th className="p-3">Username</th>
                     <th className="p-3">Role</th>
-                    <th className="p-3">Created At</th>
                     <th className="p-3">Actions</th>
                 </tr>
                 </thead>
@@ -98,9 +89,6 @@ const UserTable: React.FC = () => {
                         <td className="p-3 text-gray-600">{user.email}</td>
                         <td className="p-3 text-gray-600">{user.username}</td>
                         <td className="p-3 text-gray-600">{user.role}</td>
-                        <td className="p-3 text-gray-600">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                        </td>
                         <td className="flex gap-2 p-3 justify-center">
                             <Button variant="outline" size="sm" onClick={() => handleEdit(user._id)}>
                                 Edit
@@ -119,6 +107,13 @@ const UserTable: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleDelete}
                 message="Are you sure you want to delete this user?"
+            />
+
+            <Snackbar
+                open={openSnackbar}
+                onClose={() => setOpenSnackbar(false)}
+                message={snackbarMessage}
+                type={snackbarType}
             />
         </div>
     );
