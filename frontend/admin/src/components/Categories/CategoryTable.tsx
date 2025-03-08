@@ -8,6 +8,7 @@ import Table from '../../../src/components/UI/Table';
 import Button from '../../../src/components/UI/Button';
 import ConfirmationModal from '../../../../shared/components/UI/ConfirmationModal';
 import Snackbar from '../../../../shared/components/UI/Snackbar';
+import SearchBar from '../../../../shared/components/UI/SearchBar';
 
 const CategoryTable: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -21,7 +22,7 @@ const CategoryTable: React.FC = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
     const [isDeleting, setIsDeleting] = useState(false);
-
+    const [searchQuery, setSearchQuery] = useState<string>('');
     const isFetched = useRef(false);
 
     useEffect(() => {
@@ -64,17 +65,28 @@ const CategoryTable: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const filteredCategories = categories.filter((category) => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+            category.name.toLowerCase().includes(searchLower) ||
+            category._id.toLowerCase().includes(searchLower)
+        );
+    });
+
     if (status === 'loading') return <p>Loading categories...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
     return (
         <div className="p-6 bg-white rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Categories</h2>
-            <div className="mb-4">
+
+            <div className="flex justify-between mb-4">
                 <Button variant="primary" size="sm" onClick={handleCreate}>
                     Create Category
                 </Button>
+                <SearchBar setSearchQuery={setSearchQuery} />
             </div>
+
             <Table>
                 <thead>
                 <tr className="bg-gray-100 text-center">
@@ -86,8 +98,8 @@ const CategoryTable: React.FC = () => {
                 </tr>
                 </thead>
                 <tbody>
-                {categories.length > 0 ? (
-                    categories.map((category) => (
+                {filteredCategories.length > 0 ? (
+                    filteredCategories.map((category) => (
                         <tr key={category._id} className="border-b">
                             <td className="p-3 text-gray-600">{category._id}</td>
                             <td className="p-3 text-gray-600">{category.name}</td>

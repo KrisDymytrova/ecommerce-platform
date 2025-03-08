@@ -6,7 +6,7 @@ import { AppDispatch } from '../../../../shared/redux/store';
 import { fetchCategoryById, updateCategoryAction } from '../../../../shared/redux/slices/categoriesSlice';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { categoryValidationSchema } from '../../utils/validationsSchemas/categoryValidation';
-import { Category } from '../../../../shared/types/category';
+import { Category } from '../../../../shared/types/Category';
 import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const EditCategory: React.FC = () => {

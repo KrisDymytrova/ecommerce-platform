@@ -75,6 +75,7 @@ export const fetchUserById = createAsyncThunk<User, string>(
 
 const initialState: UsersState = {
     items: [],
+    totalUsers: 0,
     status: "idle",
     error: null,
     currentUser: null,
@@ -92,6 +93,8 @@ const usersSlice = createSlice({
             .addCase(fetchUsers.fulfilled, (state, action) => {
                 state.status = "succeeded";
                 state.items = action.payload;
+                state.totalUsers = action.payload.length;
+                console.log("Загруженные пользователи:", action.payload);
             })
             .addCase(fetchUsers.rejected, (state, action) => {
                 state.status = "failed";
@@ -100,6 +103,7 @@ const usersSlice = createSlice({
 
             .addCase(addUser.fulfilled, (state, action) => {
                 state.items.push(action.payload);
+                state.totalUsers = state.items.length;
             })
             .addCase(addUser.rejected, (state, action) => {
                 state.error = action.error.message || "Ошибка при добавлении пользователя";
@@ -117,6 +121,7 @@ const usersSlice = createSlice({
 
             .addCase(deleteUserAction.fulfilled, (state, action) => {
                 state.items = state.items.filter((user) => user._id !== action.payload);
+                state.totalUsers = state.items.length;
             })
             .addCase(deleteUserAction.rejected, (state, action) => {
                 state.error = action.error.message || "Ошибка при удалении пользователя";

@@ -1,16 +1,20 @@
-import * as React from "react";
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Formik, Form, Field, ErrorMessage, FieldArray } from "formik";
-import { Product } from "../../../../shared/types/Product";
-import { Category } from "../../../../shared/types/Category";
-import { getAuthHeaders } from "../../utils/authUtils";
-import { getApiUrl } from "../../../../shared/apiConfig";
-import { productValidationSchema } from "../../utils/validationsSchemas/productValidation";
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaTrash } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../../../shared/redux/store';
+import { fetchProductById, updateProductAction } from '../../../../shared/redux/slices/productsSlice';
+import { fetchCategories } from '../../../../shared/redux/slices/categoriesSlice';
+import { Formik, Form, Field, ErrorMessage, FieldArray } from 'formik';
+import { productValidationSchema } from '../../utils/validationsSchemas/productValidation';
+import { Product } from '../../../../shared/types/product';
+import { Category } from '../../../../shared/types/Category';
+import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const EditProduct: React.FC = () => {
     const { id } = useParams();
+    const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
 
     const [product, setProduct] = useState<Product | null>(null);
@@ -18,48 +22,72 @@ const EditProduct: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+
     useEffect(() => {
-        if (id) {
-            fetchProduct(id);
-            fetchCategories();
-        }
-    }, [id]);
+        const fetchProduct = async () => {
+            if (id) {
+                try {
+                    const actionResult = await dispatch(fetchProductById(id));
+                    if (fetchProductById.fulfilled.match(actionResult)) {
+                        setProduct(actionResult.payload);
+                    } else {
+                        setError('Product not found');
+                    }
+                } catch (err) {
+                    setError('Product not found');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
 
-    const fetchProduct = async (id: string) => {
-        try {
-            const API_URL = await getApiUrl();
-            const response = await axios.get(`${API_URL}/products/${id}`, { headers: getAuthHeaders() });
-            setProduct(response.data);
-        } catch (err) {
-            setError("The product could not be loaded");
-        } finally {
-            setLoading(false);
-        }
-    };
+        const fetchCategoriesData = async () => {
+            try {
+                const actionResult = await dispatch(fetchCategories());
+                if (fetchCategories.fulfilled.match(actionResult)) {
+                    setCategories(actionResult.payload);
+                } else {
+                    setError('Failed to load categories.');
+                }
+            } catch (err) {
+                setError('Failed to load categories.');
+            }
+        };
 
-    const fetchCategories = async () => {
-        try {
-            const API_URL = await getApiUrl();
-            const response = await axios.get(`${API_URL}/categories`, { headers: getAuthHeaders() });
-            setCategories(response.data);
-        } catch (err) {
-            setError("Failed to load categories.");
-        }
-    };
+        fetchProduct();
+        fetchCategoriesData();
+    }, [id, dispatch]);
 
     const handleSave = async (values: { title: string; price: number; description: string; category: string; images: string[] }) => {
         if (!id) return;
 
         try {
-            const API_URL = await getApiUrl();
-            await axios.put(
-                `${API_URL}/admin/products/${id}`,
-                { title: values.title, price: values.price, description: values.description, category: values.category, images: values.images },
-                { headers: getAuthHeaders() }
-            );
-            navigate("/admin/products");
+            const actionResult = await dispatch(updateProductAction({
+                id,
+                title: values.title,
+                price: values.price,
+                description: values.description,
+                categoryId: values.category,
+                images: values.images,
+            }));
+
+            if (updateProductAction.fulfilled.match(actionResult)) {
+                setSnackbarMessage("Product updated successfully");
+                setSnackbarType("success");
+                setSnackbarOpen(true);
+                setTimeout(() => navigate("/products"), 1000);
+            } else {
+                setSnackbarMessage("Failed to update product.");
+                setSnackbarType("error");
+                setSnackbarOpen(true);
+            }
         } catch (err) {
-            setError("Failed to update product.");
+            setSnackbarMessage("Failed to update product.");
+            setSnackbarType("error");
+            setSnackbarOpen(true);
         }
     };
 
@@ -70,6 +98,7 @@ const EditProduct: React.FC = () => {
     return (
         <div className="p-6 bg-white rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Edit Product</h2>
+
             <Formik
                 initialValues={{
                     title: product.title,
@@ -120,6 +149,7 @@ const EditProduct: React.FC = () => {
                                     </option>
                                 ))}
                             </Field>
+
                             <ErrorMessage name="category" component="div" className="text-red-500 text-sm" />
                         </div>
                         <div className="mb-4">
@@ -141,7 +171,7 @@ const EditProduct: React.FC = () => {
                                                         onClick={() => arrayHelpers.remove(index)}
                                                         className="ml-2 text-red-500"
                                                     >
-                                                        Remove
+                                                        <FaTrash size={16} />
                                                     </button>
                                                 </div>
                                             ))
@@ -170,6 +200,13 @@ const EditProduct: React.FC = () => {
                     </Form>
                 )}
             </Formik>
+
+            <Snackbar
+                open={snackbarOpen}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+                type={snackbarType}
+            />
         </div>
     );
 };

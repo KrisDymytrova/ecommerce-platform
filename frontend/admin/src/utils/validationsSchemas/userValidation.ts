@@ -1,4 +1,4 @@
-import * as Yup from "yup";
+import * as Yup from 'yup';
 
 export const createUserValidationSchema = Yup.object().shape({
     username: Yup.string().min(2, "Username must be at least 2 characters").required("Username is required"),

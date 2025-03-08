@@ -10,7 +10,6 @@ import CategoriesPage from '../pages/CategoriesPage';
 import EditCategoryPage from '../pages/EditCategoryPage';
 import CreateCategoryPage from '../pages/CreateCategoryPage';
 import OrdersPage from '../pages/OrdersPage';
-import EditOrderPage from '../pages/EditOrderPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 import routeNames from './routeNames';
@@ -63,10 +62,6 @@ const routerConfig = [
     {
         path: routeNames.ordersPage,
         component: OrdersPage,
-    },
-    {
-        path: routeNames.editOrderPage,
-        component: EditOrderPage,
     },
     {
         path: routeNames.notFoundPage,

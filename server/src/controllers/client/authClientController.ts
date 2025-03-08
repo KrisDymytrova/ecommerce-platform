@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { JWT_SECRET } from '../../config/database';
+import { JWT_SECRET } from '../../config/config';
 import User, { IUser } from '../../models/User';
 import RefreshToken from '../../models/RefreshToken';
 

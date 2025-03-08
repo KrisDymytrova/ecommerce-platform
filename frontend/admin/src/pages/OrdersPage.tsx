@@ -1,7 +1,7 @@
 import * as React from 'react';
 import BaseTemplate from '../templates/BaseTemplate';
 import ContentContainer from '../templates/ContentContainer';
-import OrderTable from '../components/Orders/OrderTable';
+import OrderTable from '../components/OrderTable';
 
 const OrdersPage: React.FC = () => {
     return (

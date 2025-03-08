@@ -1,10 +1,31 @@
 import { Request, Response } from 'express';
 import Product from '../../models/Product';
+import Category from '../../models/Category';
+import mongoose from "mongoose";
 
 const createProduct = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { title, price, description, category, images } = req.body;
-        const newProduct = new Product({ title, price, description, category, images });
+        const { title, price, description, categoryId, images } = req.body;
+
+        if (!categoryId) {
+            res.status(400).json({ message: 'ID категорії обовязковий' });
+            return
+        }
+
+        const categoryExists = await Category.findById(categoryId);
+        if (!categoryExists) {
+            res.status(400).json({ message: 'Категорію не знайдено' });
+            return
+        }
+
+        const newProduct = new Product({
+            title,
+            price: Number(price),
+            description,
+            category: new mongoose.Types.ObjectId(categoryId),
+            images,
+        });
+
         await newProduct.save();
         res.status(201).json(newProduct);
     } catch (error) {
@@ -40,17 +61,27 @@ const getProductById = async (req: Request, res: Response): Promise<void> => {
 const updateProduct = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        console.log('Updating product with ID:', id);
-        const updatedProduct = await Product.findByIdAndUpdate(id, req.body, { new: true });
+        const { categoryId, title, price, description, images } = req.body;
+
+        const categoryExists = await Category.findById(categoryId);
+        if (!categoryExists) {
+             res.status(400).json({ message: 'Невірний ID категорії' });
+            return
+        }
+
+        const updatedProduct = await Product.findByIdAndUpdate(
+            id,
+            { title, price, description, category: categoryId, images },
+            { new: true }
+        );
 
         if (!updatedProduct) {
-            res.status(404).json({ message: 'Товар не знайдений' });
-            return;
+             res.status(404).json({ message: 'Товар не знайдений' });
+            return
         }
 
         res.status(200).json(updatedProduct);
     } catch (error) {
-        console.error('Error while updating product:', error);
         res.status(500).json({ message: 'Помилка при оновленні товару' });
     }
 };

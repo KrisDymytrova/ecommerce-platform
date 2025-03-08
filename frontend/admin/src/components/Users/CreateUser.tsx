@@ -21,23 +21,17 @@ const CreateUser: React.FC = () => {
             const actionResult = await dispatch(addUser(values));
 
             if (addUser.fulfilled.match(actionResult)) {
-                console.log('✅ User created:', actionResult.payload);
-
                 setSnackbarMessage('User created successfully!');
                 setSnackbarType('success');
                 setSnackbarOpen(true);
 
                 setTimeout(() => navigate('/users'), 1000);
             } else {
-                console.error('❌ Ошибка при добавлении пользователя:', actionResult.error.message);
-
                 setSnackbarMessage('Failed to create user. Please try again.');
                 setSnackbarType('error');
                 setSnackbarOpen(true);
             }
         } catch (error) {
-            console.error('❌ Ошибка при добавлении пользователя:', error);
-
             setSnackbarMessage('Failed to create user. Please try again.');
             setSnackbarType('error');
             setSnackbarOpen(true);

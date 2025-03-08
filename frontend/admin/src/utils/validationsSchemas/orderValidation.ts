@@ -1,5 +1,8 @@
-import * as Yup from "yup";
+import * as Yup from 'yup';
+import { OrderStatus } from '../../../../shared/types/Order';
 
 export const orderValidationSchema = Yup.object({
-    status: Yup.string().oneOf(["pending", "completed", "shipped", "cancelled"]).required("Status is required."),
+    status: Yup.string()
+        .oneOf(Object.values(OrderStatus))
+        .required("Status is required."),
 });

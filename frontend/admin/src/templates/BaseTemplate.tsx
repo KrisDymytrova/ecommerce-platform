@@ -1,5 +1,5 @@
-import * as React from "react";
-import Sidebar from "../components/UI/Sidebar";
+import * as React from 'react';
+import Sidebar from '../components/UI/Sidebar';
 
 interface BaseTemplateProps {
     children: React.ReactNode;

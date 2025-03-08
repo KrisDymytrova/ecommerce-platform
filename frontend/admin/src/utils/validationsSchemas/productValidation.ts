@@ -1,4 +1,4 @@
-import * as Yup from "yup";
+import * as Yup from 'yup';
 
 export const productValidationSchema = Yup.object({
     title: Yup.string()
@@ -18,10 +18,14 @@ export const productValidationSchema = Yup.object({
 
     category: Yup.string()
         .required("Category is required")
-        .uuid("Invalid category ID"),
+        .matches(
+            /^[a-f\d]{24}$/i,
+            "Invalid category ID"
+        ),
 
     images: Yup.array()
         .of(Yup.string().url("Each image must be a valid URL"))
+        .ensure()
         .min(1, "At least one image is required")
-        .max(5, "You can add a maximum of 5 images")
+        .max(5, "You can add a maximum of 5 images"),
 });

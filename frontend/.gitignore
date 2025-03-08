@@ -23,6 +23,7 @@ yarn-error.log*
 
 # Environment files
 admin/.env
+client/.env
 .env.local
 .env.development
 .env.test

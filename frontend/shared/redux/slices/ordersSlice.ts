@@ -1,28 +1,25 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { Order, OrdersState } from "../../types/order";
-import {
-    getOrders,
-    updateOrderStatus,
-    deleteOrder,
-} from "../../../admin/src/api/apiService";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { Order, OrdersState } from '../../types/Order';
+import { getOrders, getOrderById, updateOrderStatus, deleteOrder } from '../../../admin/src/api/apiService';
 
-// 📌 Получить все заказы
-export const fetchOrders = createAsyncThunk<Order[], void>(
+export const fetchOrders = createAsyncThunk<Order[]>(
     "orders/fetchOrders",
     async () => {
-        try {
-            const response = await getOrders();
-            console.log("📌 Запрос на получение заказов отправлен:", response.config.url);
-            console.log("✅ Заказы загружены:", response.data);
-            return response.data;
-        } catch (error) {
-            console.error("❌ Ошибка при получении заказов:", error);
-            throw error;
-        }
+        const response = await getOrders();
+        console.log("📌 Ответ от сервера:", response.data);
+        return response.data.orders || [];
     }
 );
 
-// 📌 Обновить статус заказа
+export const fetchOrderById = createAsyncThunk<Order, string>(
+    "orders/fetchOrderById",
+    async (id) => {
+        const response = await getOrderById(id);
+        console.log("📌 Заказ загружен:", response.data);
+        return response.data;
+    }
+);
+
 export const updateOrderStatusAction = createAsyncThunk<Order, { id: string; status: string }>(
     "orders/updateOrderStatus",
     async ({ id, status }) => {
@@ -37,25 +34,26 @@ export const updateOrderStatusAction = createAsyncThunk<Order, { id: string; sta
     }
 );
 
-// 📌 Удалить заказ
 export const deleteOrderAction = createAsyncThunk<string, string>(
     "orders/deleteOrder",
     async (id, { rejectWithValue }) => {
         try {
             await deleteOrder(id);
             console.log(`✅ Заказ ${id} удален`);
-            return id; // Возвращаем id удаленного заказа
+            return id;
         } catch (error: any) {
             console.error("❌ Ошибка при удалении заказа:", error);
-            return rejectWithValue("Не удалось удалить заказ");
+            return rejectWithValue(error.response?.data?.message || "Не удалось удалить заказ");
         }
     }
 );
 
 const initialState: OrdersState = {
     items: [],
+    totalOrders: 0,
     status: "idle",
     error: null,
+    currentOrder: null,
 };
 
 const ordersSlice = createSlice({
@@ -70,27 +68,41 @@ const ordersSlice = createSlice({
             .addCase(fetchOrders.fulfilled, (state, action) => {
                 state.status = "succeeded";
                 state.items = action.payload;
+                state.totalOrders = action.payload.length;
             })
             .addCase(fetchOrders.rejected, (state, action) => {
                 state.status = "failed";
-                state.error = action.error.message ?? "Ошибка при загрузке заказов";
+                state.error = action.error.message || "Ошибка при загрузке заказов";
+            })
+
+            .addCase(fetchOrderById.pending, (state) => {
+                state.status = "loading";
+            })
+            .addCase(fetchOrderById.fulfilled, (state, action) => {
+                state.status = "succeeded";
+                state.currentOrder = action.payload;
+            })
+            .addCase(fetchOrderById.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.error.message || "Ошибка при загрузке заказа";
             })
 
             .addCase(updateOrderStatusAction.fulfilled, (state, action) => {
-                const index = state.items.findIndex((order) => order._id === action.payload._id);
+                const index = state.items.findIndex(order => order._id === action.payload._id);
                 if (index !== -1) {
-                    state.items[index] = action.payload;
+                    state.items[index].status = action.payload.status;
                 }
             })
             .addCase(updateOrderStatusAction.rejected, (state, action) => {
-                state.error = action.error.message ?? "Ошибка при обновлении статуса заказа";
+                state.error = action.error.message || "Ошибка при обновлении статуса заказа";
             })
 
             .addCase(deleteOrderAction.fulfilled, (state, action) => {
                 state.items = state.items.filter((order) => order._id !== action.payload);
+                state.totalOrders = state.items.length;
             })
             .addCase(deleteOrderAction.rejected, (state, action) => {
-                state.error = action.error.message ?? "Ошибка при удалении заказа";
+                state.error = action.error.message || "Ошибка при удалении заказа";
             });
     },
 });

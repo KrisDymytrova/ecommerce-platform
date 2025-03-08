@@ -1,41 +1,28 @@
 import * as React from 'react';
-import { useState, useEffect } from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import { validationLoginForm } from "../../../shared/utils/validationsSchemas/validationLoginForm";
-import { Eye, EyeOff } from "lucide-react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { getApiUrl } from "../../../shared/apiConfig";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch } from '../../../shared/redux/store';
+import { login } from '../../../shared/redux/slices/authSlice';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { validationLoginForm } from '../../../shared/utils/validationsSchemas/validationLoginForm';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [tokenError, setTokenError] = useState<string | null>(null);
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
+
+    const { isAuthenticated, error, loading } = useSelector((state: any) => state.auth);
 
     useEffect(() => {
-        const accessToken = localStorage.getItem("accessToken");
-        const refreshToken = localStorage.getItem("refreshToken");
-
-        if (accessToken || refreshToken) {
-            setTokenError("You are already logged in.");
+        if (isAuthenticated) {
+            navigate("/dashboard");
         }
-    }, []);
+    }, [isAuthenticated, navigate]);
 
     const handleLogin = async (values: { email: string, password: string }) => {
-        try {
-            const API_URL = await getApiUrl();
-            console.log('API URL for the request:', API_URL);
-            const response = await axios.post(`${API_URL}/admin/auth/login`, values);
-
-            localStorage.setItem("accessToken", response.data.accessToken);
-            localStorage.setItem("refreshToken", response.data.refreshToken);
-
-            navigate("/dashboard");
-        } catch (error) {
-            console.error("Authorization error:", error.response ? error.response.data : error);
-            setErrorMessage("Invalid email or password.");
-        }
+        dispatch(login(values));
     };
 
     return (
@@ -43,15 +30,9 @@ const Login: React.FC = () => {
             <div className="w-[400px] border p-8 rounded-lg shadow-md space-y-6">
                 <h1 className="text-3xl font-semibold text-center">Sign In</h1>
 
-                {tokenError && (
-                    <div className="bg-yellow-100 text-yellow-600 p-2 rounded-md text-center">
-                        {tokenError}
-                    </div>
-                )}
-
-                {errorMessage && (
+                {error && (
                     <div className="bg-red-100 text-red-600 p-2 rounded-md text-center">
-                        {errorMessage}
+                        {error}
                     </div>
                 )}
 
@@ -94,9 +75,9 @@ const Login: React.FC = () => {
                             <button
                                 type="submit"
                                 className="button-dark block mx-auto"
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || loading}
                             >
-                                {isSubmitting ? "Signing in..." : "Sign In"}
+                                {loading ? "Signing in..." : "Sign In"}
                             </button>
                         </Form>
                     )}

@@ -1,8 +1,13 @@
-import { useState } from "react";
-import { Home, Users, Package, Layers, ShoppingCart, Menu } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../../../shared/redux/slices/authSlice';
+import { Home, Users, Package, Layers, ShoppingCart, Menu, LogOut } from 'lucide-react';
 
 const SideBar = () => {
     const [isOpen, setIsOpen] = useState(true);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const menuItems = [
         { name: "Dashboard", icon: <Home size={20} />, link: "/dashboard" },
@@ -12,13 +17,13 @@ const SideBar = () => {
         { name: "Orders", icon: <ShoppingCart size={20} />, link: "/orders" },
     ];
 
+    const handleLogout = () => {
+        dispatch(logout());
+        navigate("/");
+    };
+
     return (
-        <div
-            className={`h-screen bg-gray-900 text-white p-5 transition-all ${
-                isOpen ? "w-64" : "w-20"
-            }`}
-        >
-            {/* Кнопка открытия/закрытия */}
+        <div className={`h-screen bg-gray-900 text-white p-5 transition-all ${isOpen ? "w-64" : "w-20"}`}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="text-gray-400 hover:text-white mb-5"
@@ -26,13 +31,11 @@ const SideBar = () => {
                 <Menu size={24} />
             </button>
 
-            {/* Лого */}
             <div className="flex items-center gap-2 mb-6">
                 <div className="w-8 h-8 bg-indigo-500 rounded-md" />
                 {isOpen && <span className="text-lg font-semibold">Admin Panel</span>}
             </div>
 
-            {/* Меню */}
             <nav className="space-y-4">
                 {menuItems.map((item) => (
                     <a
@@ -45,6 +48,14 @@ const SideBar = () => {
                     </a>
                 ))}
             </nav>
+
+            <div
+                className="flex items-center gap-3 px-3 py-2 mt-6 cursor-pointer hover:bg-gray-700 rounded-md transition"
+                onClick={handleLogout}
+            >
+                <LogOut size={20} />
+                {isOpen && <span>Logout</span>}
+            </div>
         </div>
     );
 };

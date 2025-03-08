@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import net from 'net';
-import { MONGO_URI } from './config/database';
+import { MONGO_URI } from './config/config';
 import appRoutes from './routes/appRoutes';
 
 dotenv.config();

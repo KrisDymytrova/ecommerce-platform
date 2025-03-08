@@ -8,6 +8,7 @@ import Table from '../../../src/components/UI/Table';
 import Button from '../../../src/components/UI/Button';
 import ConfirmationModal from '../../../../shared/components/UI/ConfirmationModal';
 import Snackbar from '../../../../shared/components/UI/Snackbar';
+import SearchBar from '../../../../shared/components/UI/SearchBar';
 
 const UserTable: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -21,6 +22,7 @@ const UserTable: React.FC = () => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
     const [isDeleting, setIsDeleting] = useState(false);
+    const [searchQuery, setSearchQuery] = useState<string>('');
 
     useEffect(() => {
         if (status === "idle" && users.length === 0) {
@@ -61,17 +63,28 @@ const UserTable: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const filteredUsers = users.filter((user) => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+            user._id.toLowerCase().includes(searchLower) ||
+            user.email.toLowerCase().includes(searchLower)
+        );
+    });
+
     if (status === "loading") return <p>Loading users...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
     return (
         <div className="p-6 bg-white rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Users</h2>
-            <div className="mb-4">
+
+            <div className="flex justify-between mb-4">
                 <Button variant="primary" size="sm" onClick={handleCreate}>
                     Create User
                 </Button>
+                <SearchBar setSearchQuery={setSearchQuery} />
             </div>
+
             <Table>
                 <thead>
                 <tr className="bg-gray-100 text-center">
@@ -83,22 +96,30 @@ const UserTable: React.FC = () => {
                 </tr>
                 </thead>
                 <tbody>
-                {users.map((user) => (
-                    <tr key={user._id} className="border-b">
-                        <td className="p-3 text-gray-600">{user._id}</td>
-                        <td className="p-3 text-gray-600">{user.email}</td>
-                        <td className="p-3 text-gray-600">{user.username}</td>
-                        <td className="p-3 text-gray-600">{user.role}</td>
-                        <td className="flex gap-2 p-3 justify-center">
-                            <Button variant="outline" size="sm" onClick={() => handleEdit(user._id)}>
-                                Edit
-                            </Button>
-                            <Button variant="danger" size="sm" onClick={() => openDeleteModal(user._id)}>
-                                Delete
-                            </Button>
+                {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => (
+                        <tr key={user._id} className="border-b">
+                            <td className="p-3 text-gray-600">{user._id}</td>
+                            <td className="p-3 text-gray-600">{user.email}</td>
+                            <td className="p-3 text-gray-600">{user.username}</td>
+                            <td className="p-3 text-gray-600">{user.role}</td>
+                            <td className="flex gap-2 p-3 justify-center">
+                                <Button variant="outline" size="sm" onClick={() => handleEdit(user._id)}>
+                                    Edit
+                                </Button>
+                                <Button variant="danger" size="sm" onClick={() => openDeleteModal(user._id)}>
+                                    Delete
+                                </Button>
+                            </td>
+                        </tr>
+                    ))
+                ) : (
+                    <tr>
+                        <td colSpan={5} className="p-3 text-center text-gray-600">
+                            No users found.
                         </td>
                     </tr>
-                ))}
+                )}
                 </tbody>
             </Table>
 

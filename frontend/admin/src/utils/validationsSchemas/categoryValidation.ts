@@ -1,4 +1,4 @@
-import * as Yup from "yup";
+import * as Yup from 'yup';
 
 export const categoryValidationSchema = Yup.object({
     name: Yup.string().required("Name is required"),

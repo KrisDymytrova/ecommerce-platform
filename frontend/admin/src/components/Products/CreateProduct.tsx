@@ -1,33 +1,74 @@
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuthHeaders } from '../../utils/authUtils';
-import axios from 'axios';
-import { getApiUrl } from "../../../../shared/apiConfig";
-import { Formik, Field, Form, ErrorMessage } from 'formik';
+import { FaTrash } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../../../shared/redux/store';
+import { addProduct } from '../../../../shared/redux/slices/productsSlice';
+import { fetchCategories } from '../../../../shared/redux/slices/categoriesSlice';
+import { Formik, Form, Field, FieldArray, ErrorMessage } from 'formik';
 import { productValidationSchema } from '../../utils/validationsSchemas/productValidation';
+import { Category } from '../../../../shared/types/Category';
+import Snackbar from '../../../../shared/components/UI/Snackbar';
 
 const CreateProduct: React.FC = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
 
-    const handleSubmit = async (values: any, { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }) => {
-        const { title, price, description, category, images } = values;
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
 
-        const newProduct = {
-            title,
-            price,
-            description,
-            category,
-            images
+    useEffect(() => {
+        const fetchCategoriesData = async () => {
+            try {
+                const actionResult = await dispatch(fetchCategories());
+                if (fetchCategories.fulfilled.match(actionResult)) {
+                    setCategories(actionResult.payload);
+                } else {
+                    setError("Failed to load categories.");
+                }
+            } catch (err) {
+                setError("Failed to load categories.");
+            }
         };
 
+        fetchCategoriesData();
+    }, [dispatch]);
+
+    const handleSubmit = async (
+        values: { title: string; price: number; description: string; category: string; images: string[] },
+        { setSubmitting }: { setSubmitting: (isSubmitting: boolean) => void }
+    ) => {
+        const { title, price, description, category, images } = values;
+
         try {
-            const API_URL = await getApiUrl();
-            await axios.post(`${API_URL}/admin/products`, newProduct, {
-                headers: getAuthHeaders(),
-            });
-            navigate('/products');
+            const actionResult = await dispatch(
+                addProduct({
+                    title,
+                    price,
+                    description,
+                    categoryId: category,
+                    images
+                })
+            );
+
+            if (addProduct.fulfilled.match(actionResult)) {
+                setSnackbarMessage("Product created successfully");
+                setSnackbarType("success");
+                setSnackbarOpen(true);
+                navigate("/products");
+            } else {
+                setSnackbarMessage("Failed to create product.");
+                setSnackbarType("error");
+                setSnackbarOpen(true);
+            }
         } catch (err) {
-            console.error("Error creating the product", err);
+            setSnackbarMessage("Error creating product.");
+            setSnackbarType("error");
+            setSnackbarOpen(true);
         } finally {
             setSubmitting(false);
         }
@@ -39,94 +80,77 @@ const CreateProduct: React.FC = () => {
 
             <Formik
                 initialValues={{
-                    title: '',
-                    price: '',
-                    description: '',
-                    category: '',
-                    images: []
+                    title: "",
+                    price: 0,
+                    description: "",
+                    category: "",
+                    images: [] as string[],
                 }}
                 validationSchema={productValidationSchema}
                 onSubmit={handleSubmit}
             >
-                {({ isSubmitting, values }) => (
+                {({ values, isSubmitting }) => (
                     <Form>
                         <div className="mb-4">
-                            <label htmlFor="title" className="block text-gray-700">Product Title</label>
-                            <Field
-                                type="text"
-                                id="title"
-                                name="title"
-                                placeholder="Product Title"
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
+                            <label className="block">Title</label>
+                            <Field type="text" name="title" className="w-full p-2 border border-gray-300 rounded" />
                             <ErrorMessage name="title" component="div" className="text-red-500 text-sm" />
                         </div>
 
                         <div className="mb-4">
-                            <label htmlFor="price" className="block text-gray-700">Price</label>
-                            <Field
-                                type="number"
-                                id="price"
-                                name="price"
-                                placeholder="Price"
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
+                            <label className="block">Price</label>
+                            <Field type="number" name="price" className="w-full p-2 border border-gray-300 rounded" />
                             <ErrorMessage name="price" component="div" className="text-red-500 text-sm" />
                         </div>
 
                         <div className="mb-4">
-                            <label htmlFor="description" className="block text-gray-700">Description</label>
-                            <Field
-                                as="textarea"
-                                id="description"
-                                name="description"
-                                placeholder="Description"
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
+                            <label className="block">Description</label>
+                            <Field as="textarea" name="description" className="w-full p-2 border border-gray-300 rounded" />
                             <ErrorMessage name="description" component="div" className="text-red-500 text-sm" />
                         </div>
 
                         <div className="mb-4">
-                            <label htmlFor="category" className="block text-gray-700">Category</label>
-                            <Field
-                                as="select"
-                                id="category"
-                                name="category"
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
+                            <label className="block">Category</label>
+                            <Field as="select" name="category" className="w-full p-2 border border-gray-300 rounded">
                                 <option value="">Select Category</option>
-                                <option value="electronics">Electronics</option>
-                                <option value="fashion">Fashion</option>
-                                <option value="home">Home</option>
-                                <option value="beauty">Beauty</option>
+                                {categories.map(category => (
+                                    <option key={category._id} value={category._id}>
+                                        {category.name}
+                                    </option>
+                                ))}
                             </Field>
                             <ErrorMessage name="category" component="div" className="text-red-500 text-sm" />
                         </div>
 
                         <div className="mb-4">
-                            <label htmlFor="images" className="block text-gray-700">Image URLs</label>
-                            <Field
-                                type="text"
-                                id="images"
-                                name="images"
-                                placeholder="Image URLs (comma separated)"
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                            <ErrorMessage name="images" component="div" className="text-red-500 text-sm" />
+                            <label className="block">Images</label>
+                            <FieldArray name="images">
+                                {({ push, remove }) => (
+                                    <div>
+                                        {values.images.map((_, index) => (
+                                            <div key={index} className="flex items-center mb-2">
+                                                <Field type="text" name={`images[${index}]`} className="w-3/4 p-2 border border-gray-300 rounded" />
+                                                <button type="button" onClick={() => remove(index)} className="ml-2 text-red-500">
+                                                    <FaTrash size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <button type="button" onClick={() => push("")} className="text-blue-500">
+                                            Add Image
+                                        </button>
+                                    </div>
+                                )}
+                            </FieldArray>
                         </div>
 
-                        <div className="mb-4">
-                            <button
-                                type="submit"
-                                className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? "Saving..." : "Save Product"}
-                            </button>
-                        </div>
+                        <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md">
+                            {isSubmitting ? "Saving..." : "Save Product"}
+                        </button>
                     </Form>
                 )}
             </Formik>
+
+            <Snackbar open={snackbarOpen} onClose={() => setSnackbarOpen(false)} message={snackbarMessage} type={snackbarType} />
         </div>
     );
 };

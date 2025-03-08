@@ -8,6 +8,7 @@ export interface User {
 
 export interface UsersState {
     items: User[];
+    totalUsers: number,
     status: "idle" | "loading" | "succeeded" | "failed";
     error: string | null;
     currentUser: User | null;

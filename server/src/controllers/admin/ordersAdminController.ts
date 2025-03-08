@@ -49,7 +49,7 @@ const updateOrderStatus = async (req: Request, res: Response): Promise<void> => 
         const { orderId } = req.params;
         const { status } = req.body;
 
-        if (!["pending", "shipped", "delivered", "canceled"].includes(status)) {
+        if (!["pending", "shipped", "processing", "delivered", "canceled"].includes(status)) {
             res.status(400).json({ message: "Невірний статус" });
             return;
         }

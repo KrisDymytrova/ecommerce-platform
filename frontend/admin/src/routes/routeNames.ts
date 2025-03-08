@@ -11,7 +11,6 @@ const routeNames = {
     editCategoryPage: '/categories/edit/:id',
     createCategoryPage: '/categories/create-category',
     ordersPage: '/orders',
-    editOrderPage: '/orders/edit/:id',
     notFoundPage: '*',
 };
 

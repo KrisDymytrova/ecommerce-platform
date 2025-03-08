@@ -1,5 +1,5 @@
-import * as React from "react";
-import Button from "../../../admin/src/components/UI/Button";
+import * as React from 'react';
+import Button from '../../../admin/src/components/UI/Button';
 
 interface ConfirmationModalProps {
     isOpen: boolean;
@@ -45,7 +45,3 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 };
 
 export default ConfirmationModal;
-
-
-
-

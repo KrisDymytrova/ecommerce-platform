@@ -26,29 +26,25 @@ const refreshAccessToken = async () => {
     }
 };
 
-// Создаем axios-инстанс
 const axiosInstance = axios.create({
-    baseURL: "", // baseURL будет устанавливаться динамически
+    baseURL: "",
     headers: {
         "Content-Type": "application/json",
     },
 });
 
-// Устанавливаем API_URL перед первым запросом
 const updateApiUrl = async () => {
     if (!API_URL) {
         API_URL = await getApiUrl();
-        if (!API_URL) throw new Error("API_URL не найден!");
+        if (!API_URL) throw new Error("API_URL не найден");
         axiosInstance.defaults.baseURL = API_URL;
     }
 };
 
-
-// Интерцептор запросов
 axiosInstance.interceptors.request.use(
     async (config) => {
-        await updateApiUrl(); // Гарантированное обновление API_URL
-        config.baseURL = API_URL; // Устанавливаем baseURL
+        await updateApiUrl();
+        config.baseURL = API_URL;
 
         const accessToken = getAccessToken();
         if (accessToken) {
@@ -59,7 +55,6 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Интерцептор ответов
 axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -78,7 +73,8 @@ axiosInstance.interceptors.response.use(
     }
 );
 
-// Функции API
+export const loginUser = (data: { email: string; password: string }) => axiosInstance.post("/admin/auth/login", data);
+
 export const createUser = (data: object) => axiosInstance.post("/admin/users/create-user", data);
 export const getUsers = () => axiosInstance.get("/admin/users");
 export const getUserById = (id: string) => axiosInstance.get(`/admin/users/${id}`);
@@ -93,13 +89,13 @@ export const deleteCategory = (id: string) => axiosInstance.delete(`/admin/categ
 
 export const createProduct = (data: object) => axiosInstance.post("/admin/products/create-product", data);
 export const getProducts = () => axiosInstance.get("/admin/products");
-export const getProductById = (id: string) => axiosInstance.get(`/admin/products/product/${id}`);
-export const updateProduct = (id: string, data: object) => axiosInstance.put(`/admin/products/product/${id}`, data);
-export const deleteProduct = (id: string) => axiosInstance.delete(`/admin/products/product/${id}`);
+export const getProductById = (id: string) => axiosInstance.get(`/admin/products/${id}`);
+export const updateProduct = (id: string, data: object) => axiosInstance.put(`/admin/products/${id}`, data);
+export const deleteProduct = (id: string) => axiosInstance.delete(`/admin/products/${id}`);
 
 export const getOrders = () => axiosInstance.get("/admin/orders");
-export const getOrderById = (id: string) => axiosInstance.get(`/admin/orders/order/${id}`);
-export const updateOrderStatus = (id: string, data: object) => axiosInstance.patch(`/admin/orders/order/${id}`, data);
-export const deleteOrder = (id: string) => axiosInstance.delete(`/admin/orders/order/${id}`);
+export const getOrderById = (id: string) => axiosInstance.get(`/admin/orders/${id}`);
+export const updateOrderStatus = (id: string, data: object) => axiosInstance.patch(`/admin/orders/${id}`, data);
+export const deleteOrder = (id: string) => axiosInstance.delete(`/admin/orders/${id}`);
 
 export default axiosInstance;
